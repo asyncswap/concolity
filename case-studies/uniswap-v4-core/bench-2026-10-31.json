@@ -1,0 +1,455 @@
+{
+ "root": "Uniswap/v4-core@d153b048 (a scratch copy)",
+ "mutated": [
+  "src/libraries/Pool.sol",
+  "src/libraries/SqrtPriceMath.sol",
+  "src/libraries/SwapMath.sol",
+  "src/libraries/TickMath.sol",
+  "src/libraries/TickBitmap.sol"
+ ],
+ "tests_files": [
+  "test/libraries/TickMath.t.sol",
+  "test/libraries/TickBitmap.t.sol",
+  "test/libraries/Pool.t.sol",
+  "test/libraries/FullMath.t.sol",
+  "test/libraries/LiquidityMath.t.sol",
+  "test/libraries/SwapMath.t.sol",
+  "test/libraries/Position.t.sol",
+  "test/libraries/SqrtPriceMath.t.sol"
+ ],
+ "seconds_per_test": 2,
+ "fuzz_tests": 26,
+ "left_out": {
+  "TickMathTestTest::test_fuzz_getTickAtSqrtPrice_getSqrtPriceAtTick_relation(int24)": "forge: InvalidSqrtPrice(1461446703485210103287273052203988822378723970342 [1.461e48])"
+ },
+ "mutants": {
+  "sites": 97,
+  "run": 12,
+  "compiled": 12
+ },
+ "kills": {
+  "forge": {
+   "killed": 9,
+   "only_this_tool": 6,
+   "false_kills": 2,
+   "median_seconds_to_kill": 0.2181765
+  },
+  "concolity": {
+   "killed": 3,
+   "only_this_tool": 0,
+   "false_kills": 0,
+   "median_seconds_to_kill": 6.111449208
+  }
+ },
+ "coverage": {
+  "sides_in_files": 634,
+  "concolity": 111,
+  "forge_corpus": 162,
+  "both": 101,
+  "only_concolity": 10,
+  "only_forge_corpus": 61,
+  "by_file": {
+   "concolity": {
+    "src/libraries/Pool.sol": 22,
+    "src/libraries/SqrtPriceMath.sol": 5,
+    "src/libraries/SwapMath.sol": 4,
+    "src/libraries/TickBitmap.sol": 9,
+    "src/libraries/TickMath.sol": 71
+   },
+   "forge_corpus": {
+    "src/libraries/Pool.sol": 24,
+    "src/libraries/SqrtPriceMath.sol": 18,
+    "src/libraries/SwapMath.sol": 14,
+    "src/libraries/TickBitmap.sol": 12,
+    "src/libraries/TickMath.sol": 94
+   }
+  },
+  "forge_corpus_inputs": 185
+ },
+ "rows": [
+  {
+   "mutant": "src/libraries/Pool.sol:95 >= \u2192 >",
+   "file": "src/libraries/Pool.sol",
+   "line": 95,
+   "from": ">=",
+   "to": ">",
+   "compiled": true,
+   "tools": {
+    "concolity": {
+     "killed": true,
+     "false_kill": false,
+     "at_seconds": 6.111449208,
+     "test": "PoolTest::test_modifyLiquidity(uint160,uint24,(address,int24,int24,int128,int24,bytes32))",
+     "reason": "Error(\"sol-debug: call reverted with different data than expectRevert wanted (got 0xaefeb924, wanted 0xc4433ed500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000)\")",
+     "calldata": "0x800208e100000000000000000000000000000000000000000000000000000001000276a30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002b70500000000000000000000000000000000000000000000000000000000000000000",
+     "seconds": 8.858975125,
+     "compile_seconds": 0.266199667,
+     "note": ""
+    },
+    "forge": {
+     "killed": true,
+     "false_kill": false,
+     "at_seconds": 0.1639825,
+     "test": "PoolTest::test_modifyLiquidity(uint160,uint24,(address,int24,int24,int128,int24,bytes32))",
+     "reason": "Error != expected error: SafeCastOverflow() != TicksMisordered(60, 60)",
+     "calldata": "0x800208e10000000000000000000000007109709ecfa91a80626ff3989d68f67f5b1dd12d0000000000000000000000000000000000000000000000000000000000000eaf0000000000000000000000000000000000000000000000000000000000003c2e000000000000000000000000000000000000000000000000000000000000003c000000000000000000000000000000000000000000000000000000000000003cffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd8f0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0000000000000000000000000000000000000000000000000000000000bfffff",
+     "seconds": 0.1639825,
+     "compile_seconds": 13.378486916,
+     "note": ""
+    }
+   }
+  },
+  {
+   "mutant": "src/libraries/Pool.sol:196 < \u2192 <=",
+   "file": "src/libraries/Pool.sol",
+   "line": 196,
+   "from": "<",
+   "to": "<=",
+   "compiled": true,
+   "tools": {
+    "concolity": {
+     "killed": false,
+     "false_kill": false,
+     "at_seconds": null,
+     "test": null,
+     "reason": null,
+     "calldata": null,
+     "seconds": 21.421135917,
+     "compile_seconds": 0.237024583,
+     "note": ""
+    },
+    "forge": {
+     "killed": false,
+     "false_kill": true,
+     "at_seconds": 7.418948166,
+     "test": "FullMathTest::test_invariant_mulDiv(uint256,uint256,uint256)",
+     "reason": "`vm.assume` rejected too many inputs (65536 allowed)",
+     "calldata": "0x",
+     "seconds": 7.418948166,
+     "compile_seconds": 13.444449083,
+     "note": ""
+    }
+   }
+  },
+  {
+   "mutant": "src/libraries/Pool.sol:332 <= \u2192 <",
+   "file": "src/libraries/Pool.sol",
+   "line": 332,
+   "from": "<=",
+   "to": "<",
+   "compiled": true,
+   "tools": {
+    "concolity": {
+     "killed": false,
+     "false_kill": false,
+     "at_seconds": null,
+     "test": null,
+     "reason": null,
+     "calldata": null,
+     "seconds": 21.620104916,
+     "compile_seconds": 0.25380125,
+     "note": ""
+    },
+    "forge": {
+     "killed": true,
+     "false_kill": false,
+     "at_seconds": 0.164535917,
+     "test": "PoolTest::test_fuzz_swap(uint160,uint24,uint16,uint16,(int256,int24,bool,uint160,uint24))",
+     "reason": "next call did not revert as expected",
+     "calldata": "0xef87a6ec0000000000000000000000007109709ecfa91a80626ff3989d68f67f5b1dd12d00000000000000000000000000000000000000000000000000000000000039ba0000000000000000000000000000000000000000000000000000000000000fff000000000000000000000000000000000000000000000000000000000000008b000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000007fffff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000007109709ecfa91a80626ff3989d68f67f5b1dd12d00000000000000000000000000000000000000000000000000000000000046ee",
+     "seconds": 0.164535917,
+     "compile_seconds": 13.38625525,
+     "note": ""
+    }
+   }
+  },
+  {
+   "mutant": "src/libraries/Pool.sol:531 != \u2192 ==",
+   "file": "src/libraries/Pool.sol",
+   "line": 531,
+   "from": "!=",
+   "to": "==",
+   "compiled": true,
+   "tools": {
+    "concolity": {
+     "killed": false,
+     "false_kill": false,
+     "at_seconds": null,
+     "test": null,
+     "reason": null,
+     "calldata": null,
+     "seconds": 21.280870709,
+     "compile_seconds": 0.249029458,
+     "note": ""
+    },
+    "forge": {
+     "killed": true,
+     "false_kill": false,
+     "at_seconds": 0.210484583,
+     "test": "PoolTest::test_modifyLiquidity(uint160,uint24,(address,int24,int24,int128,int24,bytes32))",
+     "reason": "next call did not revert as expected",
+     "calldata": "0x800208e1000000000000000000000000000b1622e5650af49ef71c656669174dd6976b9500000000000000000000000000000000000000000000000000000000001086b500000000000000000000000065e146a0afb5d568da74c7a9c2891c4e68364409fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d624a298fb83f8d9ac0b0000000000000000000000000000000000000000000000000000000000065d133aa5a0d38cf05e9f1d34a330d8bd1749c8f80b46efdd721410d09cd5d7646913",
+     "seconds": 0.210484583,
+     "compile_seconds": 13.463857333,
+     "note": ""
+    }
+   }
+  },
+  {
+   "mutant": "src/libraries/SqrtPriceMath.sol:43 == \u2192 !=",
+   "file": "src/libraries/SqrtPriceMath.sol",
+   "line": 43,
+   "from": "==",
+   "to": "!=",
+   "compiled": true,
+   "tools": {
+    "concolity": {
+     "killed": false,
+     "false_kill": false,
+     "at_seconds": null,
+     "test": null,
+     "reason": null,
+     "calldata": null,
+     "seconds": 20.8502325,
+     "compile_seconds": 0.233380125,
+     "note": ""
+    },
+    "forge": {
+     "killed": false,
+     "false_kill": false,
+     "at_seconds": null,
+     "test": null,
+     "reason": null,
+     "calldata": null,
+     "seconds": 6.168712041,
+     "compile_seconds": 15.07789725,
+     "note": ""
+    }
+   }
+  },
+  {
+   "mutant": "src/libraries/SwapMath.sol:69 >= \u2192 >",
+   "file": "src/libraries/SwapMath.sol",
+   "line": 69,
+   "from": ">=",
+   "to": ">",
+   "compiled": true,
+   "tools": {
+    "concolity": {
+     "killed": false,
+     "false_kill": false,
+     "at_seconds": null,
+     "test": null,
+     "reason": null,
+     "calldata": null,
+     "seconds": 21.176071333,
+     "compile_seconds": 0.241659042,
+     "note": ""
+    },
+    "forge": {
+     "killed": true,
+     "false_kill": false,
+     "at_seconds": 0.2181765,
+     "test": "SwapMathTest::test_fuzz_computeSwapStep(uint160,uint160,uint128,int256,uint24)",
+     "reason": "assertion failed: 55 != 0",
+     "calldata": "0xfe435dc30000000000000000000000007109709ecfa91a80626ff3989d68f67f5b1dd12d0000000000000000000000007109709ecfa91a80626ff3989d68f67f5b1dd12d00000000000000000000000000000000000000000000000000000000007ffeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc900000000000000000000000000000000000000000000000000000000000f4240",
+     "seconds": 0.2181765,
+     "compile_seconds": 14.926405125,
+     "note": ""
+    }
+   }
+  },
+  {
+   "mutant": "src/libraries/TickMath.sol:83 * \u2192 /",
+   "file": "src/libraries/TickMath.sol",
+   "line": 83,
+   "from": "*",
+   "to": "/",
+   "compiled": true,
+   "tools": {
+    "concolity": {
+     "killed": false,
+     "false_kill": false,
+     "at_seconds": null,
+     "test": null,
+     "reason": null,
+     "calldata": null,
+     "seconds": 20.815801833,
+     "compile_seconds": 0.236340917,
+     "note": ""
+    },
+    "forge": {
+     "killed": false,
+     "false_kill": true,
+     "at_seconds": 6.181904917,
+     "test": "FullMathTest::test_invariant_mulDivRoundingUp(uint256,uint256,uint256)",
+     "reason": "`vm.assume` rejected too many inputs (65536 allowed)",
+     "calldata": "0x",
+     "seconds": 6.181904917,
+     "compile_seconds": 18.236390792,
+     "note": ""
+    }
+   }
+  },
+  {
+   "mutant": "src/libraries/TickMath.sol:87 * \u2192 /",
+   "file": "src/libraries/TickMath.sol",
+   "line": 87,
+   "from": "*",
+   "to": "/",
+   "compiled": true,
+   "tools": {
+    "concolity": {
+     "killed": true,
+     "false_kill": false,
+     "at_seconds": 14.35154275,
+     "test": "PoolTest::test_fuzz_swap(uint160,uint24,uint16,uint16,(int256,int24,bool,uint160,uint24))",
+     "reason": "InvalidPrice()",
+     "calldata": "0xef87a6ec00000000000000000000000000000000000000000000000000000001000276a300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+     "seconds": 15.536949584,
+     "compile_seconds": 0.228284208,
+     "note": ""
+    },
+    "forge": {
+     "killed": true,
+     "false_kill": false,
+     "at_seconds": 0.219637916,
+     "test": "PoolTest::test_fuzz_swap(uint160,uint24,uint16,uint16,(int256,int24,bool,uint160,uint24))",
+     "reason": "InvalidPrice()",
+     "calldata": "0xef87a6ec00000000000000000000000000000000000000000000000003e114a671d091b90000000000000000000000000000000000000000000000000000000000000405000000000000000000000000000000000000000000000000000000000000000b000000000000000000000000000000000000000000000000000000000000031effffffffffffffffffffffffffffffff9b68479f7813d5549b0735b3e05eb2e1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd1bd0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000003ad28e6891c24460244e00000000000000000000000000000000000000000000000000000000001fa5b0",
+     "seconds": 0.219637916,
+     "compile_seconds": 17.125229417,
+     "note": ""
+    }
+   }
+  },
+  {
+   "mutant": "src/libraries/TickMath.sol:91 * \u2192 /",
+   "file": "src/libraries/TickMath.sol",
+   "line": 91,
+   "from": "*",
+   "to": "/",
+   "compiled": true,
+   "tools": {
+    "concolity": {
+     "killed": false,
+     "false_kill": false,
+     "at_seconds": null,
+     "test": null,
+     "reason": null,
+     "calldata": null,
+     "seconds": 21.100372708,
+     "compile_seconds": 0.234057917,
+     "note": ""
+    },
+    "forge": {
+     "killed": true,
+     "false_kill": false,
+     "at_seconds": 0.444240333,
+     "test": "PoolTest::test_modifyLiquidity(uint160,uint24,(address,int24,int24,int128,int24,bytes32))",
+     "reason": "Error != expected error: InvalidPrice() != SafeCastOverflow()",
+     "calldata": "0x800208e10000000000000000000000000000000000000000000000000000000b824b731500000000000000000000000000000000000000000000000000000000000000770000000000000000000000005e6d00e3587a1ffce57bf6fa0e690a4bf5c22971fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffae971fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff5000000000000000000000000000000000000000000000000c88b1d42276831b41000000000000000000000000000000000000000000000000000000000000000013bbee36135057231b03df04855cf53b589814f4187b153649304ce11713b8b79",
+     "seconds": 0.444240333,
+     "compile_seconds": 17.170920584,
+     "note": ""
+    }
+   }
+  },
+  {
+   "mutant": "src/libraries/TickMath.sol:95 * \u2192 /",
+   "file": "src/libraries/TickMath.sol",
+   "line": 95,
+   "from": "*",
+   "to": "/",
+   "compiled": true,
+   "tools": {
+    "concolity": {
+     "killed": false,
+     "false_kill": false,
+     "at_seconds": null,
+     "test": null,
+     "reason": null,
+     "calldata": null,
+     "seconds": 21.041512626,
+     "compile_seconds": 0.245934458,
+     "note": ""
+    },
+    "forge": {
+     "killed": true,
+     "false_kill": false,
+     "at_seconds": 4.5713435,
+     "test": "PoolTest::test_modifyLiquidity(uint160,uint24,(address,int24,int24,int128,int24,bytes32))",
+     "reason": "InvalidPrice()",
+     "calldata": "0x800208e1000000000000000000000000000000000000000b30b57fe9b0189178809e10240000000000000000000000000000000000000000000000000000000000000001000000000000000000000000605aeac29c81cf51d17a558672a1d13b931a45e4fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa6e90000000000000000000000000000000000000000000000000000000000000ccda00000000000000000000000000000000000000000000000000000001d36d78ab000000000000000000000000000000000000000000000000000000000000000116b11acce025f2e9d35a936367afe1b9aec7a4a08622bcaf250f04aa1156fde4",
+     "seconds": 4.5713435,
+     "compile_seconds": 17.259638167,
+     "note": ""
+    }
+   }
+  },
+  {
+   "mutant": "src/libraries/TickMath.sol:99 * \u2192 /",
+   "file": "src/libraries/TickMath.sol",
+   "line": 99,
+   "from": "*",
+   "to": "/",
+   "compiled": true,
+   "tools": {
+    "concolity": {
+     "killed": false,
+     "false_kill": false,
+     "at_seconds": null,
+     "test": null,
+     "reason": null,
+     "calldata": null,
+     "seconds": 22.009505792,
+     "compile_seconds": 0.2353075,
+     "note": ""
+    },
+    "forge": {
+     "killed": true,
+     "false_kill": false,
+     "at_seconds": 0.219616917,
+     "test": "PoolTest::test_modifyLiquidity(uint160,uint24,(address,int24,int24,int128,int24,bytes32))",
+     "reason": "assertion failed: 887272 >= 887272",
+     "calldata": "0x800208e1000000000000000000000000fffd8963efd1fc6a506488495d951d5263988d25000000000000000000000000000000000000000000000000000000000000206c00000000000000000000000000000000000000000000000000000000000044a4000000000000000000000000000000000000000000000000000000000000105c0000000000000000000000000000000000000000000000000000000000005538ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1a0000000000000000000000000000000000000000000000000000000000003cad00000000000000000000000000000000000000000000000000000000000032cc",
+     "seconds": 0.219616917,
+     "compile_seconds": 17.135679541,
+     "note": ""
+    }
+   }
+  },
+  {
+   "mutant": "src/libraries/TickMath.sol:139 - \u2192 +",
+   "file": "src/libraries/TickMath.sol",
+   "line": 139,
+   "from": "-",
+   "to": "+",
+   "compiled": true,
+   "tools": {
+    "concolity": {
+     "killed": true,
+     "false_kill": false,
+     "at_seconds": 0.032943792,
+     "test": "PoolTest::test_pool_initialize(uint160,uint24)",
+     "reason": "InvalidTick(2661819)",
+     "calldata": "0x4b99301200000000000000000000000000000000000000000000000000000001000276a30000000000000000000000000000000000000000000000000000000000000000",
+     "seconds": 2.987492458,
+     "compile_seconds": 0.244151125,
+     "note": ""
+    },
+    "forge": {
+     "killed": true,
+     "false_kill": false,
+     "at_seconds": 0.161310167,
+     "test": "PoolTest::test_fuzz_swap(uint160,uint24,uint16,uint16,(int256,int24,bool,uint160,uint24))",
+     "reason": "assertion failed: 4273521 >= 887272",
+     "calldata": "0xef87a6ec0000000000000000000000000013146deadea8df8969f122dbafb61d5d5f86c0000000000000000000000000000000000000000000000000000000000014436600000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c2fd90d0b07f89ba6ff63d4ca577691b1cfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff400000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000003de0a81eb675a82b00000000000000000000000000000000000000000000000000000000000ccc91",
+     "seconds": 0.161310167,
+     "compile_seconds": 17.272847375,
+     "note": ""
+    }
+   }
+  }
+ ]
+}

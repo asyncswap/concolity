@@ -93,6 +93,29 @@ What was missing in the tools:
 - **The highest-leverage step was reading the invariants against the fix**, not running a tool: "does any invariant
   see what this change changed, and does the campaign reach it?" That's now in the hunt skill.
 
+### Uniswap v4-core: coverage, a guard explored, mutants (2026-10-31, d153b048)
+
+Report: case-studies/uniswap-v4-core/REPORT-2026-10-31.md. 598/598 tests agree with forge (one fuzz-seed
+difference). The protocol's code: 96.1% of lines, 59.0% of JUMPI sides; 436 JUMPIs with one side no test takes, 200
+never reached. What the untaken sides are, almost always: the failing side of a guard (`ManagerLocked`,
+`CurrencyNotSettled`, `TicksMisordered`, `TickLowerOutOfBounds`, `TickLiquidityOverflow`), never fired from
+`PoolManager`'s own bytecode. `--at` now says which side of a JUMPI reverts, so this reads off the map.
+
+| Where | What | Status |
+|---|---|---|
+| `Pool.sol:167, 170` (`liquidityGrossAfter… > maxLiquidityPerTick`) | explore: one harness pins the tick's stored liquidity (unsat under pinned values), the other's inputs don't decide the branch. The cap guards liquidity accumulated across positions: only a sequence of `modifyLiquidity` calls on one tick could reach it. | open: a sequence property, for the invariant runner (FUZZ.md step 1) |
+| `Pool.sol:95–97` (`TicksMisordered`, `TickLowerOutOfBounds`, `TickUpperOutOfBounds`) | the reverts are never taken from `PoolManager`'s copy; line 96's in `PoolTest`'s copy neither | the mutant run's `Pool.sol:95` (`>=` → `>`) was killed by both tools through `PoolTest::test_modifyLiquidity` (the fuzz test does reach `tickLower == tickUpper`); 96 and 97 weren't among the 12 mutants |
+| `Pool.sol:106–117` (`setProtocolFee`, `setLPFee` inside `Pool`) | lines no test runs from the protocol's bytecode | open: the fee paths through `Pool` |
+
+Mutants (12, forge against concolity at 2 s per fuzz test, 26 harnesses): forge 9 kills, concolity 3, none unique
+to concolity; the three both missed are one equivalent mutant (`Pool.sol:196`, `liquidityDelta < 0` → `<=`: a zero
+delta flips no tick) and two the suite's unit tests catch (`SqrtPriceMath.sol:43`'s overflow check, `TickMath.sol:83`'s
+bit-0x4 multiplier). Two bench bugs found and fixed on the way: a test that fails on the original stayed in forge's
+filter and `--fail-fast` ended every run on it; forge's rejection limit (65,536) ends a time-boxed run on a test whose
+`vm.assume` rejects most inputs (FullMath's). What was missing in the tools, found here: the sequence runner again;
+and a campaign that fuzzes before it solves (FUZZ.md §7), since 2 s of solving lost to 2 s of random inputs on every
+mutant here.
+
 ### Fuzzer benchmark: the price book's mutants (2026-10-26, fead63f)
 
 `concolity bench`, 30 operator mutants of RadixPriceTree, EligiblePrice and TickPrice, 65 fuzz tests, 2 s each
