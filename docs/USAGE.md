@@ -15,7 +15,7 @@ There is also **bench**, a benchmark of fuzzers on planted bugs.
 ## Install
 
 ```sh
-git clone https://github.com/formalmind/concolity && cd concolity
+git clone https://github.com/asyncswap/concolity && cd concolity
 cargo install --path .          # puts `concolity` in ~/.cargo/bin
 brew install z3                 # for explore and bench (the solver)
 ```

@@ -7,7 +7,7 @@ description: Coverage, concolic exploration and agent debugging of a Foundry pro
 
 concolity runs a Foundry project's tests in revm on the bytecode solc produces with the project's settings (optimizer
 on: the code that ships). Every answer is a concrete run with reproducible inputs. Binary: `concolity` (build it with
-`cargo build --release` in a checkout of github.com/formalmind/concolity). `explore` needs `z3` on the PATH.
+`cargo build --release` in a checkout of github.com/asyncswap/concolity). `explore` needs `z3` on the PATH.
 
 Always pass the project root (where foundry.toml is). Paths in answers are relative to it.
 

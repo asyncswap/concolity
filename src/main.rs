@@ -19,7 +19,7 @@ const EXAMPLES: &str = "\x1b[1;32mExamples:\x1b[0m (run in a Foundry project, or
   concolity help <command>                            every option of a command
 
 Colour is on at a terminal; NO_COLOR=1 turns it off. Add --json to coverage and explore for scripts.
-Source and docs: https://github.com/formalmind/concolity";
+Source and docs: https://github.com/asyncswap/concolity";
 
 #[derive(Parser)]
 #[command(name = "concolity", version, about = "Testing tools for EVM bytecode: coverage, concolic exploration and an agent debugger, for Foundry projects", styles = STYLES, after_help = EXAMPLES, arg_required_else_help = true)]

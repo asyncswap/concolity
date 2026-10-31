@@ -46,7 +46,7 @@ fn run(id: &str, results: Vec<Value>) -> Value {
     json!({
         "tool": { "driver": {
             "name": "concolity",
-            "informationUri": "https://github.com/formalmind/concolity",
+            "informationUri": "https://github.com/asyncswap/concolity",
             "version": env!("CARGO_PKG_VERSION"),
             "rules": RULES.iter().map(|r| json!({ "id": r.id, "name": r.name, "shortDescription": { "text": r.text }, "defaultConfiguration": { "level": r.level } })).collect::<Vec<_>>(),
         } },
