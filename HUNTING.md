@@ -115,7 +115,16 @@ filter and `--fail-fast` ended every run on it; forge's rejection limit (65,536)
 `vm.assume` rejects most inputs (FullMath's). What was missing in the tools, found here: the sequence runner again;
 and a campaign that fuzzes before it solves (FUZZ.md §7), since 2 s of solving lost to 2 s of random inputs on every
 mutant here. Built the same day: `explore` fuzzes first (mutations inside the ABI types, the bytecode's constants as a
-dictionary, sides as feedback) and solves at the plateau; measured on the Async Swap benchmark below.
+dictionary, sides as feedback) and solves at the plateau; measured on the Async Swap benchmark below, and again
+here the same evening (`bench-2026-10-31-fuzz-first.json`, a different 12 by the grown mutation table, three tools):
+forge 7, the campaign 4, concolity with fresh random inputs and no solver 6; a two-run solver turn changed nothing.
+Coverage holds (campaign 182 sides, forge's corpus 175, 9 only the campaign reaches); kills don't, and the two the
+campaign loses to random (`TickMath.sol:83`, `:91`) fall to random in 0.2 s and 2.3 s, so the gap is the mutator's
+locality: one leaf changed on a handful of seeds rarely lands on the ticks those multipliers change, fresh `int24`
+draws do. Next in `explore`: fresh random inputs mixed into the fuzz phase (one run in four). Four survivors of every
+tool are inputs the fuzz suite never draws (`Pool.sol:328` the exact `MIN_SQRT_PRICE` limit, `Pool.sol:503` token1 fee
+growth with the range below the current tick, `SqrtPriceMath.sol:43` the fast path against its fallback,
+`SwapMath.sol:61` a zero amount): in the report's §3 for the team, none exploitable.
 
 ### Fuzzer benchmark: the price book's mutants (2026-10-26, fead63f)
 
