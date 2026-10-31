@@ -125,6 +125,13 @@ draws do. Next in `explore`: fresh random inputs mixed into the fuzz phase (one 
 tool are inputs the fuzz suite never draws (`Pool.sol:328` the exact `MIN_SQRT_PRICE` limit, `Pool.sol:503` token1 fee
 growth with the range below the current tick, `SqrtPriceMath.sol:43` the fast path against its fallback,
 `SwapMath.sol:61` a zero amount): in the report's §3 for the team, none exploitable.
+Later that night the guess about the mutator proved wrong: `explore --per-test 2` on one mutant showed random
+inputs at 3,167 runs in 0.2 s and the campaign at 261 runs before two symbolic runs took 11 s (17 z3 calls), past
+the test's deadline. The solver's turn is a wall-time budget now (what the fuzz phase cost, a tenth of a second at
+least, never past the deadline, each z3 call getting what is left). Rerun (`bench-2026-10-31-budgeted-solver.json`):
+forge 8, campaign 7, random 7; the campaign makes 180,000–660,000 fuzz runs per mutant at 2 s per test. forge's one
+unique kill (`Pool.sol:531`, `flipped`'s `==` → `!=`) needs an `int128` delta of a specific sign and magnitude in one
+call: how forge draws integer magnitudes against ours is the next thing to compare.
 
 ### Fuzzer benchmark: the price book's mutants (2026-10-26, fead63f)
 

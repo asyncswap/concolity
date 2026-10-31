@@ -107,6 +107,8 @@ concolity explore --timeout-ms 20000                        # a deep equation (2
 concolity explore --fuzz-runs 1000 --plateau 100            # more plain fuzzing before the solver (defaults 256 and 64)
 concolity explore --fuzz-runs 0                             # the solver from the first run, as before
 concolity explore --runs-per-test 40 --flips-per-run 12     # more symbolic runs per test (defaults 12 and 6)
+concolity explore --per-test 2                              # a campaign: fuzz each test for 2 s, stop at the first failure (what bench runs per mutant)
+concolity explore --per-test 2 --random-only                # the same without the solver, to see what solving adds
 concolity explore --json                                    # every side with its outcome, and the findings
 concolity explore --sarif .formal/findings.sarif            # findings, unreachable and solved sides (merged into the file)
 CONCOLITY_DEBUG=1 concolity explore --only X                # print each run's decisions and pins
@@ -117,7 +119,9 @@ coverage first otherwise. Per fuzz test it **fuzzes first**: plain runs of rando
 changed at a time, inside its type; the constants the bytecode pushes as a dictionary), kept when they take a branch
 side nothing took before. When `--plateau` runs in a row add no side, the **solver takes over**: each kept input runs
 with the symbolic shadow and z3 flips the sides of its path no test takes; a solution runs for real, joins the corpus,
-and in a campaign the fuzzing resumes from it. Fuzzing finds what random inputs can, cheaply; the solver finds the
+and in a campaign the fuzzing resumes from it. A campaign's solver turn is a wall-time budget, what the fuzz phase
+before it cost (a tenth of a second at least): a few thousand plain runs fit in the time one symbolic run takes, so
+the solver never eats a test's budget. Fuzzing finds what random inputs can, cheaply; the solver finds the
 equalities and magic values they can't. Each untaken side ends as one of:
 
 | Outcome | Meaning | What to do |

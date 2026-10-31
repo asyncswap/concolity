@@ -124,6 +124,13 @@ enum Command {
         timeout_ms: u32,
         #[arg(long, default_value_t = 2)]
         seeds: usize,
+        /// A campaign instead: fuzz each test for this many seconds (the solver at each plateau), stopping at the
+        /// first failure. What `bench` runs per mutant.
+        #[arg(long)]
+        per_test: Option<u64>,
+        /// With --per-test: no solver, random and mutated inputs only.
+        #[arg(long)]
+        random_only: bool,
         /// Print the report as JSON.
         #[arg(long)]
         json: bool,
@@ -213,7 +220,7 @@ fn main() -> Result<()> {
                 eprintln!("lcov: {}", path.display());
             }
         }
-        Command::Explore { root, test_dir, skip, include, only, target, fuzz_runs, plateau, runs_per_test, flips_per_run, timeout_ms, seeds, json, sarif } => {
+        Command::Explore { root, test_dir, skip, include, only, target, fuzz_runs, plateau, runs_per_test, flips_per_run, timeout_ms, seeds, per_test, random_only, json, sarif } => {
             let target = match target {
                 Some(t) => {
                     let (f, l) = t.rsplit_once(':').ok_or_else(|| anyhow::anyhow!("--target is file:line"))?;
@@ -222,8 +229,21 @@ fn main() -> Result<()> {
                 None => None,
             };
             let coverage = concolity::coverage::Options { root: root.clone(), test_dir, skip, include, fuzz_runs: 32, fast: false };
-            let opts = concolity::explore::Options { coverage, fuzz_runs, plateau, runs_per_test, flips_per_run, timeout_ms, seeds, only, target, campaign: None };
+            let campaign = per_test.map(|secs| concolity::explore::Campaign {
+                files: concolity::coverage::test_files(&coverage.root, &coverage.tests(), &coverage.skip),
+                tests: None,
+                per_test: std::time::Duration::from_secs(secs),
+                stop_at_failure: true,
+                random_only,
+                replay: None,
+            });
+            let opts = concolity::explore::Options { coverage, fuzz_runs, plateau, runs_per_test, flips_per_run, timeout_ms, seeds, only, target, campaign };
             let report = concolity::explore::run_and_remember(&opts)?;
+            if let Some(c) = &report.campaign {
+                for f in &c.failures {
+                    println!("failed {} at {:.1}s: {} ({})", f.test, f.at.as_secs_f64(), f.reason, f.args);
+                }
+            }
             if let Some(path) = sarif {
                 concolity::sarif::write(&path, concolity::sarif::explore_run(&root, &report))?;
                 eprintln!("sarif: {}", path.display());

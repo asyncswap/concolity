@@ -439,7 +439,7 @@ impl Permissions {
 }
 
 /// The test files under `dir`, relative to the root, sorted.
-pub(crate) fn test_files(root: &Path, dir: &str, skip: &[String]) -> Vec<String> {
+pub fn test_files(root: &Path, dir: &str, skip: &[String]) -> Vec<String> {
     let mut out = vec![];
     let mut stack = vec![root.join(dir)];
     while let Some(d) = stack.pop() {

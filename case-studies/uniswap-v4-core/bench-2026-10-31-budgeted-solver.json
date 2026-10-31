@@ -1,0 +1,665 @@
+{
+  "root": ".",
+  "mutated": [
+    "src/libraries/Pool.sol",
+    "src/libraries/SqrtPriceMath.sol",
+    "src/libraries/SwapMath.sol",
+    "src/libraries/TickMath.sol",
+    "src/libraries/TickBitmap.sol"
+  ],
+  "tests_files": [
+    "test/libraries/TickMath.t.sol",
+    "test/libraries/TickBitmap.t.sol",
+    "test/libraries/Pool.t.sol",
+    "test/libraries/FullMath.t.sol",
+    "test/libraries/LiquidityMath.t.sol",
+    "test/libraries/SwapMath.t.sol",
+    "test/libraries/Position.t.sol",
+    "test/libraries/SqrtPriceMath.t.sol"
+  ],
+  "seconds_per_test": 2,
+  "fuzz_tests": 26,
+  "left_out": {
+    "TickMathTestTest::test_fuzz_getTickAtSqrtPrice_getSqrtPriceAtTick_relation(int24)": "forge: InvalidSqrtPrice(1461446703485210103287273052203988822378723970342 [1.461e48])"
+  },
+  "mutants": {
+    "sites": 101,
+    "run": 12,
+    "compiled": 12
+  },
+  "kills": {
+    "forge": {
+      "killed": 8,
+      "only_this_tool": 1,
+      "false_kills": 0,
+      "median_seconds_to_kill": 0.267686709
+    },
+    "concolity": {
+      "killed": 7,
+      "only_this_tool": 0,
+      "false_kills": 0,
+      "median_seconds_to_kill": 1.05153375
+    },
+    "concolity-random": {
+      "killed": 7,
+      "only_this_tool": 0,
+      "false_kills": 0,
+      "median_seconds_to_kill": 0.13823575
+    }
+  },
+  "coverage": {
+    "sides_in_files": 634,
+    "concolity": 186,
+    "forge_corpus": 184,
+    "both": 184,
+    "only_concolity": 2,
+    "only_forge_corpus": 0,
+    "by_file": {
+      "concolity": {
+        "src/libraries/Pool.sol": 38,
+        "src/libraries/SqrtPriceMath.sol": 23,
+        "src/libraries/SwapMath.sol": 14,
+        "src/libraries/TickBitmap.sol": 16,
+        "src/libraries/TickMath.sol": 95
+      },
+      "forge_corpus": {
+        "src/libraries/Pool.sol": 38,
+        "src/libraries/SqrtPriceMath.sol": 22,
+        "src/libraries/SwapMath.sol": 14,
+        "src/libraries/TickBitmap.sol": 15,
+        "src/libraries/TickMath.sol": 95
+      }
+    },
+    "forge_corpus_inputs": 157
+  },
+  "rows": [
+    {
+      "mutant": "src/libraries/Pool.sol:95 >= → >",
+      "file": "src/libraries/Pool.sol",
+      "line": 95,
+      "from": ">=",
+      "to": ">",
+      "compiled": true,
+      "tools": {
+        "concolity": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 2.051743292,
+          "test": "PoolTest::test_modifyLiquidity(uint160,uint24,(address,int24,int24,int128,int24,bytes32))",
+          "reason": "Error(\"sol-debug: call reverted with different data than expectRevert wanted (got 0xaefeb924, wanted 0xc4433ed500000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001)\")",
+          "calldata": "0x800208e10000000000000000000000009318ad35dda2dc0a5cedd29067b7218812f23ca9000000000000000000000000000000000000000000000000000000000000010d00000000000000000000000097e971d88ff50ac8a9914654dc5e961772ee15bf0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001d112a85c4a4484f8f3b3eeb8420786b55172110e361706b84e768ddb8f1e2776",
+          "seconds": 2.244210792,
+          "compile_seconds": 0.345312583,
+          "fuzz_runs": 181826,
+          "symbolic_runs": 41,
+          "note": ""
+        },
+        "concolity-random": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 2.053630625,
+          "test": "PoolTest::test_modifyLiquidity(uint160,uint24,(address,int24,int24,int128,int24,bytes32))",
+          "reason": "Error(\"sol-debug: call reverted with different data than expectRevert wanted (got 0xaefeb924, wanted 0xc4433ed500000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001)\")",
+          "calldata": "0x800208e10000000000000000000000009318ad35dda2dc0a5cedd29067b7218812f23ca9000000000000000000000000000000000000000000000000000000000000010d00000000000000000000000097e971d88ff50ac8a9914654dc5e961772ee15bf0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001d112a85c4a4484f8f3b3eeb8420786b55172110e361706b84e768ddb8f1e2776",
+          "seconds": 2.195943292,
+          "compile_seconds": 0.289630167,
+          "fuzz_runs": 228724,
+          "symbolic_runs": 0,
+          "note": ""
+        },
+        "forge": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 4.203987125,
+          "test": "PoolTest::test_modifyLiquidity(uint160,uint24,(address,int24,int24,int128,int24,bytes32))",
+          "reason": "Error != expected error: SafeCastOverflow() != TicksMisordered(60, 60)",
+          "calldata": "0x800208e10000000000000000000000007109709ecfa91a80626ff3989d68f67f5b1dd12d0000000000000000000000000000000000000000000000000000000000000eaf0000000000000000000000000000000000000000000000000000000000003c2e000000000000000000000000000000000000000000000000000000000000003c000000000000000000000000000000000000000000000000000000000000003cffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd8f0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0000000000000000000000000000000000000000000000000000000000bfffff",
+          "seconds": 4.203987125,
+          "compile_seconds": 15.76847425,
+          "fuzz_runs": 0,
+          "symbolic_runs": 0,
+          "note": ""
+        }
+      }
+    },
+    {
+      "mutant": "src/libraries/Pool.sol:196 < → <=",
+      "file": "src/libraries/Pool.sol",
+      "line": 196,
+      "from": "<",
+      "to": "<=",
+      "compiled": true,
+      "tools": {
+        "concolity": {
+          "killed": false,
+          "false_kill": false,
+          "at_seconds": null,
+          "test": null,
+          "reason": null,
+          "calldata": null,
+          "seconds": 14.081605417,
+          "compile_seconds": 0.337122625,
+          "fuzz_runs": 543673,
+          "symbolic_runs": 143,
+          "note": ""
+        },
+        "concolity-random": {
+          "killed": false,
+          "false_kill": false,
+          "at_seconds": null,
+          "test": null,
+          "reason": null,
+          "calldata": null,
+          "seconds": 14.102544291,
+          "compile_seconds": 0.32028675,
+          "fuzz_runs": 682848,
+          "symbolic_runs": 0,
+          "note": ""
+        },
+        "forge": {
+          "killed": false,
+          "false_kill": false,
+          "at_seconds": null,
+          "test": null,
+          "reason": null,
+          "calldata": null,
+          "seconds": 6.230309,
+          "compile_seconds": 15.294477083,
+          "fuzz_runs": 0,
+          "symbolic_runs": 0,
+          "note": ""
+        }
+      }
+    },
+    {
+      "mutant": "src/libraries/Pool.sol:328 <= → <",
+      "file": "src/libraries/Pool.sol",
+      "line": 328,
+      "from": "<=",
+      "to": "<",
+      "compiled": true,
+      "tools": {
+        "concolity": {
+          "killed": false,
+          "false_kill": false,
+          "at_seconds": null,
+          "test": null,
+          "reason": null,
+          "calldata": null,
+          "seconds": 14.090985042,
+          "compile_seconds": 0.314824792,
+          "fuzz_runs": 641213,
+          "symbolic_runs": 144,
+          "note": ""
+        },
+        "concolity-random": {
+          "killed": false,
+          "false_kill": false,
+          "at_seconds": null,
+          "test": null,
+          "reason": null,
+          "calldata": null,
+          "seconds": 14.091981125,
+          "compile_seconds": 0.261854833,
+          "fuzz_runs": 729013,
+          "symbolic_runs": 0,
+          "note": ""
+        },
+        "forge": {
+          "killed": false,
+          "false_kill": false,
+          "at_seconds": null,
+          "test": null,
+          "reason": null,
+          "calldata": null,
+          "seconds": 8.20423,
+          "compile_seconds": 15.946189792,
+          "fuzz_runs": 0,
+          "symbolic_runs": 0,
+          "note": ""
+        }
+      }
+    },
+    {
+      "mutant": "src/libraries/Pool.sol:531 == → !=",
+      "file": "src/libraries/Pool.sol",
+      "line": 531,
+      "from": "==",
+      "to": "!=",
+      "compiled": true,
+      "tools": {
+        "concolity": {
+          "killed": false,
+          "false_kill": false,
+          "at_seconds": null,
+          "test": null,
+          "reason": null,
+          "calldata": null,
+          "seconds": 10.004625292,
+          "compile_seconds": 7.016380042,
+          "fuzz_runs": 662608,
+          "symbolic_runs": 146,
+          "note": ""
+        },
+        "concolity-random": {
+          "killed": false,
+          "false_kill": false,
+          "at_seconds": null,
+          "test": null,
+          "reason": null,
+          "calldata": null,
+          "seconds": 14.081646458,
+          "compile_seconds": 0.253940459,
+          "fuzz_runs": 751919,
+          "symbolic_runs": 0,
+          "note": ""
+        },
+        "forge": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 0.164041459,
+          "test": "PoolTest::test_modifyLiquidity(uint160,uint24,(address,int24,int24,int128,int24,bytes32))",
+          "reason": "next call did not revert as expected",
+          "calldata": "0x800208e1000000000000000000000000000b1622e5650af49ef71c656669174dd6976b9500000000000000000000000000000000000000000000000000000000001086b500000000000000000000000065e146a0afb5d568da74c7a9c2891c4e68364409fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d624a298fb83f8d9ac0b0000000000000000000000000000000000000000000000000000000000065d133aa5a0d38cf05e9f1d34a330d8bd1749c8f80b46efdd721410d09cd5d7646913",
+          "seconds": 0.164041459,
+          "compile_seconds": 15.112195583,
+          "fuzz_runs": 0,
+          "symbolic_runs": 0,
+          "note": ""
+        }
+      }
+    },
+    {
+      "mutant": "src/libraries/SqrtPriceMath.sol:43 / → *",
+      "file": "src/libraries/SqrtPriceMath.sol",
+      "line": 43,
+      "from": "/",
+      "to": "*",
+      "compiled": true,
+      "tools": {
+        "concolity": {
+          "killed": false,
+          "false_kill": false,
+          "at_seconds": null,
+          "test": null,
+          "reason": null,
+          "calldata": null,
+          "seconds": 14.104249959,
+          "compile_seconds": 0.354108375,
+          "fuzz_runs": 503247,
+          "symbolic_runs": 135,
+          "note": ""
+        },
+        "concolity-random": {
+          "killed": false,
+          "false_kill": false,
+          "at_seconds": null,
+          "test": null,
+          "reason": null,
+          "calldata": null,
+          "seconds": 14.117162126,
+          "compile_seconds": 0.252290208,
+          "fuzz_runs": 714020,
+          "symbolic_runs": 0,
+          "note": ""
+        },
+        "forge": {
+          "killed": false,
+          "false_kill": false,
+          "at_seconds": null,
+          "test": null,
+          "reason": null,
+          "calldata": null,
+          "seconds": 6.195626292,
+          "compile_seconds": 17.278945208,
+          "fuzz_runs": 0,
+          "symbolic_runs": 0,
+          "note": ""
+        }
+      }
+    },
+    {
+      "mutant": "src/libraries/SwapMath.sol:60 >= → >",
+      "file": "src/libraries/SwapMath.sol",
+      "line": 60,
+      "from": ">=",
+      "to": ">",
+      "compiled": true,
+      "tools": {
+        "concolity": {
+          "killed": false,
+          "false_kill": false,
+          "at_seconds": null,
+          "test": null,
+          "reason": null,
+          "calldata": null,
+          "seconds": 8.738084291,
+          "compile_seconds": 9.477949417,
+          "fuzz_runs": 561521,
+          "symbolic_runs": 144,
+          "note": ""
+        },
+        "concolity-random": {
+          "killed": false,
+          "false_kill": false,
+          "at_seconds": null,
+          "test": null,
+          "reason": null,
+          "calldata": null,
+          "seconds": 14.083517041,
+          "compile_seconds": 0.3165085,
+          "fuzz_runs": 686799,
+          "symbolic_runs": 0,
+          "note": ""
+        },
+        "forge": {
+          "killed": false,
+          "false_kill": false,
+          "at_seconds": null,
+          "test": null,
+          "reason": null,
+          "calldata": null,
+          "seconds": 8.177731708,
+          "compile_seconds": 17.322456958,
+          "fuzz_runs": 0,
+          "symbolic_runs": 0,
+          "note": ""
+        }
+      }
+    },
+    {
+      "mutant": "src/libraries/TickMath.sol:82 * → /",
+      "file": "src/libraries/TickMath.sol",
+      "line": 82,
+      "from": "*",
+      "to": "/",
+      "compiled": true,
+      "tools": {
+        "concolity": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 2.213360625,
+          "test": "PoolTest::test_modifyLiquidity(uint160,uint24,(address,int24,int24,int128,int24,bytes32))",
+          "reason": "InvalidPrice()",
+          "calldata": "0x800208e100000000000000000000000000000000000000000000000000000002540be4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000f1b75c8ba1d91b3c3685383bf063e8a48474b511fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd000000000000000000000000000000000000000000000000000000000000029c00000000000000000000000000000000000000000000000000000000000002970000000000000000000000000000000000000000000000000000000000000001cbe8faa45d51a8644cca20eb7f1305afeb59b652cfe73fd040e03461d5073922",
+          "seconds": 2.305063833,
+          "compile_seconds": 7.456650667,
+          "fuzz_runs": 466252,
+          "symbolic_runs": 98,
+          "note": ""
+        },
+        "concolity-random": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 3.662078084,
+          "test": "PoolTest::test_modifyLiquidity(uint160,uint24,(address,int24,int24,int128,int24,bytes32))",
+          "reason": "InvalidPrice()",
+          "calldata": "0x800208e100000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000f1b75c8ba1d91b3c3685383bf063e8a48474b511fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd000000000000000000000000000000000000000000000000000000000000029c00000000000000000000000000000000000000000000000000000000000002970000000000000000000000000000000000000000000000000000000000000001cbe8faa45d51a8644cca20eb7f1305afeb59b652cfe73fd040e03461d5073922",
+          "seconds": 3.792031459,
+          "compile_seconds": 0.302782333,
+          "fuzz_runs": 369223,
+          "symbolic_runs": 0,
+          "note": ""
+        },
+        "forge": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 6.225049333,
+          "test": "PoolTest::test_modifyLiquidity(uint160,uint24,(address,int24,int24,int128,int24,bytes32))",
+          "reason": "InvalidPrice()",
+          "calldata": "0x800208e10000000000000000000000000000000000000000908fa201e832177f23a8f89a0000000000000000000000000000000000000000000000000000000000013fcd0000000000000000000000002b47016d9a21b504412d448ae4d15c3ec3094aa0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffadcb0000000000000000000000000000000000000000000000000000000000000005a000000000000000000000000000000000000000000000000000000000000e1c5000000000000000000000000000000000000000000000000000000000000000231c002d96d0e14666502f2ce079251f824c94f14e084dc6331c7f33ff54c4eb4",
+          "seconds": 6.225049333,
+          "compile_seconds": 21.644813792,
+          "fuzz_runs": 0,
+          "symbolic_runs": 0,
+          "note": ""
+        }
+      }
+    },
+    {
+      "mutant": "src/libraries/TickMath.sol:86 * → /",
+      "file": "src/libraries/TickMath.sol",
+      "line": 86,
+      "from": "*",
+      "to": "/",
+      "compiled": true,
+      "tools": {
+        "concolity": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 0.985509917,
+          "test": "PoolTest::test_pool_initialize(uint160,uint24)",
+          "reason": "Error(\"assertion failed: 887272 >= 887272\")",
+          "calldata": "0x4b993012000000000000000000000000fffd8963efd1fc6a506488495d951d51639616820000000000000000000000000000000000000000000000000000000000000000",
+          "seconds": 1.125273084,
+          "compile_seconds": 8.495936958,
+          "fuzz_runs": 372524,
+          "symbolic_runs": 97,
+          "note": ""
+        },
+        "concolity-random": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 0.051462958,
+          "test": "PoolTest::test_pool_initialize(uint160,uint24)",
+          "reason": "Error(\"assertion failed: 887272 >= 887272\")",
+          "calldata": "0x4b993012000000000000000000000000fffd8963efd1fc6a506488495d951d516396168200000000000000000000000000000000000000000000000000000000007e9d21",
+          "seconds": 0.197272333,
+          "compile_seconds": 0.280782917,
+          "fuzz_runs": 9759,
+          "symbolic_runs": 0,
+          "note": ""
+        },
+        "forge": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 0.166958708,
+          "test": "PoolTest::test_fuzz_swap(uint160,uint24,uint16,uint16,(int256,int24,bool,uint160,uint24))",
+          "reason": "InvalidPrice()",
+          "calldata": "0xef87a6ec00000000000000000000000000000000000000000000000003e114a671d091b90000000000000000000000000000000000000000000000000000000000000405000000000000000000000000000000000000000000000000000000000000000b000000000000000000000000000000000000000000000000000000000000031effffffffffffffffffffffffffffffff9b68479f7813d5549b0735b3e05eb2e1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd1bd0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000003ad28e6891c24460244e00000000000000000000000000000000000000000000000000000000001fa5b0",
+          "seconds": 0.166958708,
+          "compile_seconds": 19.8410025,
+          "fuzz_runs": 0,
+          "symbolic_runs": 0,
+          "note": ""
+        }
+      }
+    },
+    {
+      "mutant": "src/libraries/TickMath.sol:91 != → ==",
+      "file": "src/libraries/TickMath.sol",
+      "line": 91,
+      "from": "!=",
+      "to": "==",
+      "compiled": true,
+      "tools": {
+        "concolity": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 1.05153375,
+          "test": "PoolTest::test_pool_initialize(uint160,uint24)",
+          "reason": "Error(\"assertion failed: 887272 >= 887272\")",
+          "calldata": "0x4b993012000000000000000000000000fffd8963efd1fc6a506488495d951d516396168200000000000000000000000000000000000000000000000000000000003f4e90",
+          "seconds": 1.143617083,
+          "compile_seconds": 8.230849042,
+          "fuzz_runs": 387703,
+          "symbolic_runs": 94,
+          "note": ""
+        },
+        "concolity-random": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 0.133455583,
+          "test": "PoolTest::test_pool_initialize(uint160,uint24)",
+          "reason": "Error(\"assertion failed: 887272 >= 887272\")",
+          "calldata": "0x4b993012000000000000000000000000fffd8963efd1fc6a506488495d951d516396168200000000000000000000000000000000000000000000000000000000003f4e90",
+          "seconds": 0.276766333,
+          "compile_seconds": 0.287328042,
+          "fuzz_runs": 18774,
+          "symbolic_runs": 0,
+          "note": ""
+        },
+        "forge": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 0.274721833,
+          "test": "PoolTest::test_fuzz_swap(uint160,uint24,uint16,uint16,(int256,int24,bool,uint160,uint24))",
+          "reason": "assertion failed: 887272 >= 887272",
+          "calldata": "0xef87a6ec000000000000000000000000fffd8963efd1fc6a506488495d951d5163961681000000000000000000000000000000000000000000000000000000000000321800000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000499a0000000000000000000000000000000000000000000000000000000000002700000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000035350000000000000000000000000000000000000000000000000000000000ffffff",
+          "seconds": 0.274721833,
+          "compile_seconds": 19.819081208,
+          "fuzz_runs": 0,
+          "symbolic_runs": 0,
+          "note": ""
+        }
+      }
+    },
+    {
+      "mutant": "src/libraries/TickMath.sol:95 != → ==",
+      "file": "src/libraries/TickMath.sol",
+      "line": 95,
+      "from": "!=",
+      "to": "==",
+      "compiled": true,
+      "tools": {
+        "concolity": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 1.028771583,
+          "test": "PoolTest::test_pool_initialize(uint160,uint24)",
+          "reason": "Error(\"assertion failed: 887272 >= 887272\")",
+          "calldata": "0x4b993012000000000000000000000000fffd8963efd1fc6a506488495d951d516396168200000000000000000000000000000000000000000000000000000000007e9d21",
+          "seconds": 1.123666999,
+          "compile_seconds": 7.176326667,
+          "fuzz_runs": 402905,
+          "symbolic_runs": 91,
+          "note": ""
+        },
+        "concolity-random": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 0.13823575,
+          "test": "PoolTest::test_pool_initialize(uint160,uint24)",
+          "reason": "Error(\"assertion failed: 887272 >= 887272\")",
+          "calldata": "0x4b993012000000000000000000000000fffd8963efd1fc6a506488495d951d51639616820000000000000000000000000000000000000000000000000000000000431811",
+          "seconds": 0.275855583,
+          "compile_seconds": 0.251427417,
+          "fuzz_runs": 19227,
+          "symbolic_runs": 0,
+          "note": ""
+        },
+        "forge": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 0.267686709,
+          "test": "PoolTest::test_fuzz_swap(uint160,uint24,uint16,uint16,(int256,int24,bool,uint160,uint24))",
+          "reason": "assertion failed: 887272 >= 887272",
+          "calldata": "0xef87a6ec000000000000000000000000fffd8963efd1fc6a506488495d951d5163961681000000000000000000000000000000000000000000000000000000000000321800000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000499a0000000000000000000000000000000000000000000000000000000000002700000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000035350000000000000000000000000000000000000000000000000000000000ffffff",
+          "seconds": 0.267686709,
+          "compile_seconds": 19.617877041,
+          "fuzz_runs": 0,
+          "symbolic_runs": 0,
+          "note": ""
+        }
+      }
+    },
+    {
+      "mutant": "src/libraries/TickMath.sol:99 * → /",
+      "file": "src/libraries/TickMath.sol",
+      "line": 99,
+      "from": "*",
+      "to": "/",
+      "compiled": true,
+      "tools": {
+        "concolity": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 1.6425753749999998,
+          "test": "PoolTest::test_pool_initialize(uint160,uint24)",
+          "reason": "Error(\"assertion failed: 887272 >= 887272\")",
+          "calldata": "0x4b993012000000000000000000000000fffd8963efd1fc6a506488495d951d5163961682000000000000000000000000000000000000000000000000000000000000034b",
+          "seconds": 1.7679782080000002,
+          "compile_seconds": 0.266583542,
+          "fuzz_runs": 193517,
+          "symbolic_runs": 33,
+          "note": ""
+        },
+        "concolity-random": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 0.809940667,
+          "test": "PoolTest::test_pool_initialize(uint160,uint24)",
+          "reason": "Error(\"assertion failed: 887272 >= 887272\")",
+          "calldata": "0x4b993012000000000000000000000000fffd8963efd1fc6a506488495d951d51639616820000000000000000000000000000000000000000000000000000000000000000",
+          "seconds": 0.942497875,
+          "compile_seconds": 0.24294825,
+          "fuzz_runs": 106073,
+          "symbolic_runs": 0,
+          "note": ""
+        },
+        "forge": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 0.216580416,
+          "test": "PoolTest::test_modifyLiquidity(uint160,uint24,(address,int24,int24,int128,int24,bytes32))",
+          "reason": "assertion failed: 887272 >= 887272",
+          "calldata": "0x800208e1000000000000000000000000fffd8963efd1fc6a506488495d951d5263988d25000000000000000000000000000000000000000000000000000000000000206c00000000000000000000000000000000000000000000000000000000000044a4000000000000000000000000000000000000000000000000000000000000105c0000000000000000000000000000000000000000000000000000000000005538ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1a0000000000000000000000000000000000000000000000000000000000003cad00000000000000000000000000000000000000000000000000000000000032cc",
+          "seconds": 0.216580416,
+          "compile_seconds": 19.157004,
+          "fuzz_runs": 0,
+          "symbolic_runs": 0,
+          "note": ""
+        }
+      }
+    },
+    {
+      "mutant": "src/libraries/TickMath.sol:139 - → +",
+      "file": "src/libraries/TickMath.sol",
+      "line": 139,
+      "from": "-",
+      "to": "+",
+      "compiled": true,
+      "tools": {
+        "concolity": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 0.0003815,
+          "test": "PoolTest::test_pool_initialize(uint160,uint24)",
+          "reason": "InvalidTick(4422867)",
+          "calldata": "0x4b993012000000000000000000000000825e782ab308054e0a3347e5014d7311186d276b00000000000000000000000000000000000000000000000000000000007e9d21",
+          "seconds": 0.228690541,
+          "compile_seconds": 0.271356292,
+          "fuzz_runs": 1297,
+          "symbolic_runs": 5,
+          "note": ""
+        },
+        "concolity-random": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 0.000356959,
+          "test": "PoolTest::test_pool_initialize(uint160,uint24)",
+          "reason": "InvalidTick(4422867)",
+          "calldata": "0x4b993012000000000000000000000000825e782ab308054e0a3347e5014d7311186d276b00000000000000000000000000000000000000000000000000000000007e9d21",
+          "seconds": 0.133474708,
+          "compile_seconds": 0.22776025,
+          "fuzz_runs": 3567,
+          "symbolic_runs": 0,
+          "note": ""
+        },
+        "forge": {
+          "killed": true,
+          "false_kill": false,
+          "at_seconds": 0.162253416,
+          "test": "PoolTest::test_fuzz_swap(uint160,uint24,uint16,uint16,(int256,int24,bool,uint160,uint24))",
+          "reason": "assertion failed: 4273521 >= 887272",
+          "calldata": "0xef87a6ec0000000000000000000000000013146deadea8df8969f122dbafb61d5d5f86c0000000000000000000000000000000000000000000000000000000000014436600000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c2fd90d0b07f89ba6ff63d4ca577691b1cfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff400000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000003de0a81eb675a82b00000000000000000000000000000000000000000000000000000000000ccc91",
+          "seconds": 0.162253416,
+          "compile_seconds": 19.183173917,
+          "fuzz_runs": 0,
+          "symbolic_runs": 0,
+          "note": ""
+        }
+      }
+    }
+  ]
+}

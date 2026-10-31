@@ -613,8 +613,12 @@ fn explore_test(
     // In a campaign the solver gets a short turn at each plateau (a couple of symbolic runs, each flipping the leaves
     // of one corpus entry), then the fuzzer resumes from whatever it solved: a run of a few hundred random inputs
     // costs what one symbolic run does, and most sides fall to the cheap ones.
+    // The turn is also time-boxed: the solver may spend what the fuzz phase before it spent (one run at least), so
+    // a symbolic run of several seconds (z3 on every leaf of a long path) can't eat a test's whole budget.
     let mut solver_turn = 0usize;
     let solver_turn_len = if campaign.is_some() { 2 } else { usize::MAX };
+    let mut phase_started = Instant::now();
+    let mut fuzz_phase = Duration::ZERO;
     let mut plain_runs = 0usize;
     let mut tried: HashSet<u64> = HashSet::new();
     let mut seen_sides: HashSet<(B256, usize, bool)> = HashSet::new();
@@ -641,6 +645,8 @@ fn explore_test(
                 fuzzing_now = false;
                 since_new = 0;
                 solver_turn = 0;
+                fuzz_phase = phase_started.elapsed();
+                phase_started = Instant::now();
                 continue;
             }
             if until.is_none() && plain_runs >= opts.fuzz_runs {
@@ -651,9 +657,9 @@ fn explore_test(
                 fuzzing_now = false;
                 continue;
             }
-            // Mostly a mutation of a corpus entry (or a seed); now and then a fresh random input.
+            // Mostly a mutation of a corpus entry (or a seed); one run in four a fresh random input.
             let pool: Vec<&Vec<u8>> = corpus.iter().chain(seeds.iter()).collect();
-            let base = if pool.is_empty() || rng.next().is_multiple_of(10) { None } else { decode(pool[(rng.next() % pool.len() as u64) as usize]) };
+            let base = if pool.is_empty() || rng.next().is_multiple_of(4) { None } else { decode(pool[(rng.next() % pool.len() as u64) as usize]) };
             let args = match base {
                 Some(base) => crate::fuzz::mutate(&base, &mut rng, dict),
                 None => match rng.value(&types) {
@@ -664,11 +670,12 @@ fn explore_test(
             (encode(args), false)
         } else {
             match queue.pop_front().or_else(|| to_solve.pop_front()) {
-                Some(d) if solver_turn >= solver_turn_len && queue.is_empty() => {
+                Some(d) if queue.is_empty() && (solver_turn >= solver_turn_len || (campaign.is_some() && solver_turn > 0 && phase_started.elapsed() >= fuzz_phase.max(Duration::from_millis(100)))) => {
                     // The turn is over (solutions still queued run first, since they are what the turn was for).
                     to_solve.push_front(d);
                     fuzzing_now = true;
                     since_new = 0;
+                    phase_started = Instant::now();
                     continue;
                 }
                 Some(d) => {
@@ -682,6 +689,7 @@ fn explore_test(
                     // The solver has nothing left: fuzz again, from the corpus the solutions enlarged.
                     fuzzing_now = true;
                     since_new = 0;
+                    phase_started = Instant::now();
                     continue;
                 }
                 None => break,
@@ -798,7 +806,24 @@ fn explore_test(
         }
         leaves.sort();
         let mut exploring = 0;
+        // In a campaign the solver's turn is a budget in wall time: what the fuzz phase before it cost (a tenth of a
+        // second at least), never past the test's deadline. Each z3 call gets what is left of it.
+        let turn_ends = campaign.map(|_| {
+            let budget = fuzz_phase.max(Duration::from_millis(100));
+            let end = phase_started + budget;
+            until.map_or(end, |u| end.min(u))
+        });
         for (prio, i) in leaves.into_iter().take(opts.flips_per_run * 2) {
+            let timeout_ms = match turn_ends {
+                Some(end) => {
+                    let left = end.saturating_duration_since(Instant::now()).as_millis() as u32;
+                    if left < 5 {
+                        break;
+                    }
+                    opts.timeout_ms.min(left)
+                }
+                None => opts.timeout_ms,
+            };
             if prio == 1 {
                 // A side this test hasn't taken yet: worth a few tries, after the targets.
                 exploring += 1;
@@ -822,7 +847,7 @@ fn explore_test(
                 return;
             }
             part.solver_calls += 1;
-            let answer = solver.check(&shadow.arena, &query, opts.timeout_ms);
+            let answer = solver.check(&shadow.arena, &query, timeout_ms);
             let label = label_of(s, labels, d.code);
             let key = label.map(|l| (l, d.pc, !d.jumped));
             match answer {

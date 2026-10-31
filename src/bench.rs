@@ -150,6 +150,9 @@ pub struct Outcome {
     pub note: String,
     /// Every test that failed (a baseline run without --fail-fast).
     pub failed: Vec<(String, String)>,
+    /// concolity's runs: plain (fuzz) and symbolic.
+    pub fuzz_runs: usize,
+    pub runs: usize,
 }
 
 impl Outcome {
@@ -166,6 +169,8 @@ impl Outcome {
             "calldata": self.failure.as_ref().map(|f| hex(&f.2)),
             "seconds": self.seconds,
             "compile_seconds": self.compile_seconds,
+            "fuzz_runs": self.fuzz_runs,
+            "symbolic_runs": self.runs,
             "note": self.note,
         })
     }
@@ -339,8 +344,9 @@ fn concolity(opts: &Options, tests: &HashSet<String>, random_only: bool) -> Resu
     c.random_only = random_only;
     let started = Instant::now();
     let r = explore::run(&e)?;
+    let (fuzz_runs, runs) = (r.fuzz_runs, r.runs);
     let c = r.campaign.unwrap_or_default();
-    let mut o = Outcome { compile_seconds: c.compile.as_secs_f64(), seconds: started.elapsed().saturating_sub(c.compile).as_secs_f64(), ..Default::default() };
+    let mut o = Outcome { compile_seconds: c.compile.as_secs_f64(), seconds: started.elapsed().saturating_sub(c.compile).as_secs_f64(), fuzz_runs, runs, ..Default::default() };
     if c.tests.is_empty() {
         o.note = "no test ran (the build failed?)".into();
     }
