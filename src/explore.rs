@@ -610,6 +610,11 @@ fn explore_test(
     let fuzz_first = replay.is_none() && (campaign.is_some() || opts.fuzz_runs > 0);
     let mut fuzzing_now = fuzz_first;
     let mut since_new = 0usize;
+    // In a campaign the solver gets a short turn at each plateau (a couple of symbolic runs, each flipping the leaves
+    // of one corpus entry), then the fuzzer resumes from whatever it solved: a run of a few hundred random inputs
+    // costs what one symbolic run does, and most sides fall to the cheap ones.
+    let mut solver_turn = 0usize;
+    let solver_turn_len = if campaign.is_some() { 2 } else { usize::MAX };
     let mut plain_runs = 0usize;
     let mut tried: HashSet<u64> = HashSet::new();
     let mut seen_sides: HashSet<(B256, usize, bool)> = HashSet::new();
@@ -635,6 +640,7 @@ fn explore_test(
             if plateau && !random_only {
                 fuzzing_now = false;
                 since_new = 0;
+                solver_turn = 0;
                 continue;
             }
             if until.is_none() && plain_runs >= opts.fuzz_runs {
@@ -658,10 +664,18 @@ fn explore_test(
             (encode(args), false)
         } else {
             match queue.pop_front().or_else(|| to_solve.pop_front()) {
+                Some(d) if solver_turn >= solver_turn_len && queue.is_empty() => {
+                    // The turn is over (solutions still queued run first, since they are what the turn was for).
+                    to_solve.push_front(d);
+                    fuzzing_now = true;
+                    since_new = 0;
+                    continue;
+                }
                 Some(d) => {
                     if until.is_none() && runs >= opts.runs_per_test {
                         break;
                     }
+                    solver_turn += 1;
                     (d, true)
                 }
                 None if until.is_some() && replay.is_none() && !random_only => {
