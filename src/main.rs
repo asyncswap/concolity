@@ -108,6 +108,14 @@ enum Command {
         /// Only the untaken sides at this place: src/AsyncSwap.sol:446.
         #[arg(long)]
         target: Option<String>,
+        /// Plain fuzz runs per test (random and mutated inputs, coverage as feedback) before the solver is asked; 0
+        /// asks it from the first run.
+        #[arg(long, default_value_t = 256)]
+        fuzz_runs: usize,
+        /// Fuzz runs without a new branch side that hand over to the solver.
+        #[arg(long, default_value_t = 64)]
+        plateau: usize,
+        /// Symbolic runs per test: each flips its path's leaves with z3.
         #[arg(long, default_value_t = 12)]
         runs_per_test: usize,
         #[arg(long, default_value_t = 6)]
@@ -205,7 +213,7 @@ fn main() -> Result<()> {
                 eprintln!("lcov: {}", path.display());
             }
         }
-        Command::Explore { root, test_dir, skip, include, only, target, runs_per_test, flips_per_run, timeout_ms, seeds, json, sarif } => {
+        Command::Explore { root, test_dir, skip, include, only, target, fuzz_runs, plateau, runs_per_test, flips_per_run, timeout_ms, seeds, json, sarif } => {
             let target = match target {
                 Some(t) => {
                     let (f, l) = t.rsplit_once(':').ok_or_else(|| anyhow::anyhow!("--target is file:line"))?;
@@ -214,7 +222,7 @@ fn main() -> Result<()> {
                 None => None,
             };
             let coverage = concolity::coverage::Options { root: root.clone(), test_dir, skip, include, fuzz_runs: 32, fast: false };
-            let opts = concolity::explore::Options { coverage, runs_per_test, flips_per_run, timeout_ms, seeds, only, target, campaign: None };
+            let opts = concolity::explore::Options { coverage, fuzz_runs, plateau, runs_per_test, flips_per_run, timeout_ms, seeds, only, target, campaign: None };
             let report = concolity::explore::run_and_remember(&opts)?;
             if let Some(path) = sarif {
                 concolity::sarif::write(&path, concolity::sarif::explore_run(&root, &report))?;

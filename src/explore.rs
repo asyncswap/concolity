@@ -31,7 +31,12 @@ use std::time::{Duration, Instant};
 #[derive(Clone, Debug)]
 pub struct Options {
     pub coverage: coverage::Options,
-    /// Runs per fuzz test, seeds included.
+    /// Plain fuzz runs per test before the solver is asked (random and mutated inputs, coverage as feedback); 0 asks
+    /// the solver from the first run. A campaign fuzzes until the plateau instead.
+    pub fuzz_runs: usize,
+    /// Fuzz runs without a new branch side that end the fuzzing phase: the plateau, where the solver takes over.
+    pub plateau: usize,
+    /// Symbolic runs per fuzz test (each flips its path's leaves with z3), seeds included.
     pub runs_per_test: usize,
     /// Leaves solved after each run.
     pub flips_per_run: usize,
@@ -140,7 +145,10 @@ pub struct Finding {
 pub struct Report {
     pub targets: BTreeMap<Side, Outcome>,
     pub findings: Vec<Finding>,
+    /// Symbolic runs.
     pub runs: usize,
+    /// Plain fuzz runs.
+    pub fuzz_runs: usize,
     pub solver_calls: usize,
     /// Self-check failures: steps where the model's value wasn't revm's (bugs in the model, if any).
     pub mismatches: usize,
@@ -199,6 +207,8 @@ struct Part {
     pinned_ops: HashMap<u8, usize>,
     /// Solutions dropped because they weren't well-formed ABI for the test's parameters.
     malformed: usize,
+    /// Plain runs (no symbolic shadow): the fuzzing phase.
+    fuzz_runs: usize,
     failures: Vec<Failure>,
     replayed: Vec<(String, Vec<u8>, bool)>,
     tests: Vec<String>,
@@ -372,7 +382,7 @@ pub fn run(opts: &Options) -> Result<Report> {
 
     let mut best: HashMap<(String, usize, bool), Option<Outcome>> = targets.keys().map(|k| (k.clone(), None)).collect();
     let mut decided = HashSet::new();
-    let (mut findings, mut runs, mut solver_calls, mut mismatches, mut malformed, mut stale) = (vec![], 0, 0, 0, 0, 0);
+    let (mut findings, mut runs, mut fuzz_runs, mut solver_calls, mut mismatches, mut malformed, mut stale) = (vec![], 0, 0, 0, 0, 0, 0);
     let (mut mismatch_ops, mut pinned_ops) = (BTreeMap::new(), BTreeMap::new());
     let op_name = |o: u8| revm::bytecode::opcode::OpCode::new(o).map_or(format!("0x{o:02x}"), |c| c.as_str().to_string());
     let mut campaign = opts.campaign.as_ref().map(|_| CampaignResult::default());
@@ -403,6 +413,7 @@ pub fn run(opts: &Options) -> Result<Report> {
         decided.extend(p.decided);
         findings.extend(p.findings);
         runs += p.runs;
+        fuzz_runs += p.fuzz_runs;
         solver_calls += p.solver_calls;
         mismatches += p.mismatches;
         malformed += p.malformed;
@@ -435,7 +446,7 @@ pub fn run(opts: &Options) -> Result<Report> {
         c.failures.sort_by_key(|f| f.at);
         c.tests.sort();
     }
-    Ok(Report { targets, findings, runs, solver_calls, mismatches, mismatch_ops, pinned_ops, malformed, stale, time: started.elapsed(), campaign })
+    Ok(Report { targets, findings, runs, fuzz_runs, solver_calls, mismatches, mismatch_ops, pinned_ops, malformed, stale, time: started.elapsed(), campaign })
 }
 
 fn worker(project: &formal_ast::solc::Project, settings: &sol_debug::solc::Settings, batch: &[String], test_dir: &str, opts: &Options, wanted: &HashSet<(String, usize, bool)>, stop: &AtomicBool) -> Result<Part> {
@@ -455,6 +466,8 @@ fn worker(project: &formal_ast::solc::Project, settings: &sol_debug::solc::Setti
     let fresh = s.snapshot();
     let filters = Filters::from_foundry(&project.root);
     let mut solver = Solver::z3()?;
+    // The constants the compiled code compares against, for the mutators.
+    let dict = crate::fuzz::Dictionary::from_codes(s.artifacts.iter().flat_map(|a| [a.runtime.code.as_slice(), a.init.code.as_slice()]));
     let fuzzing = Instant::now();
     let mut labels: HashMap<B256, Option<String>> = HashMap::new();
     let contracts: Vec<usize> = (0..s.artifacts.len()).filter(|i| batch.contains(&s.artifacts[*i].file)).collect();
@@ -479,7 +492,7 @@ fn worker(project: &formal_ast::solc::Project, settings: &sol_debug::solc::Setti
                 break;
             }
             part.tests.push(format!("{name}::{sig}"));
-            explore_test(&mut s, &ready, address, &format!("{name}::{sig}"), sig, opts, wanted, &mut solver, &mut labels, &mut part, (fuzzing, stop));
+            explore_test(&mut s, &ready, address, &format!("{name}::{sig}"), sig, opts, wanted, &mut solver, &mut labels, &mut part, (fuzzing, stop), &dict);
         }
         for f in part.findings.iter_mut().filter(|f| f.file.is_empty()) {
             f.file = s.artifacts[ci].file.clone();
@@ -528,6 +541,12 @@ fn taken(s: &Session, labels: &mut HashMap<B256, Option<String>>, wanted: &HashS
 }
 
 #[allow(clippy::too_many_arguments)]
+/// Every JUMPI side the session has taken so far, in any code: the fuzzing phase's feedback.
+fn sides_taken(s: &Session) -> usize {
+    s.evm.inspector.coverage.as_ref().map(|cov| cov.codes.iter().map(|c| c.jumps.values().map(|(j, f)| (*j > 0) as usize + (*f > 0) as usize).sum::<usize>()).sum()).unwrap_or(0)
+}
+
+#[allow(clippy::too_many_arguments)]
 fn explore_test(
     s: &mut Session,
     ready: &sol_debug::session::Snapshot,
@@ -540,6 +559,7 @@ fn explore_test(
     labels: &mut HashMap<B256, Option<String>>,
     part: &mut Part,
     (fuzzing, stop): (Instant, &AtomicBool),
+    dict: &crate::fuzz::Dictionary,
 ) {
     let selector = keccak256(sig.as_bytes())[..4].to_vec();
     let Ok(types) = DynSolType::parse(&sig[sig.find('(').unwrap()..]) else { return };
@@ -549,74 +569,126 @@ fn explore_test(
         // The head: a dynamic parameter is one offset word there.
         ts.iter().fold(4, |at, t| at + if t.is_dynamic() { 32 } else { padding(t, at, &mut domain) });
     }
-    let mut queue: VecDeque<Vec<u8>> = VecDeque::new();
-    // Seeds: all-zero arguments, then a few random ones.
+    let encode = |args: Vec<DynSolValue>| {
+        let mut d = selector.clone();
+        d.extend(DynSolValue::Tuple(args).abi_encode_params());
+        d
+    };
+    let decode = |data: &[u8]| match types.abi_decode_params(data.get(4..).unwrap_or(&[])) {
+        Ok(DynSolValue::Tuple(v)) => Some(v),
+        _ => None,
+    };
+    // Seeds: all-zero arguments, then a few random ones. They are the first corpus.
+    let mut seeds: Vec<Vec<u8>> = vec![];
     if let DynSolType::Tuple(ts) = &types {
         let zero: Vec<DynSolValue> = ts.iter().map(|t| t.abi_decode(&[0u8; 64 * 32]).unwrap_or(DynSolValue::Uint(U256::ZERO, 256))).collect();
-        let mut d = selector.clone();
-        d.extend(DynSolValue::Tuple(zero).abi_encode_params());
-        queue.push_back(d);
+        seeds.push(encode(zero));
     }
     for _ in 0..opts.seeds {
         if let Some(DynSolValue::Tuple(args)) = rng.value(&types) {
-            let mut d = selector.clone();
-            d.extend(DynSolValue::Tuple(args).abi_encode_params());
-            queue.push_back(d);
+            seeds.push(encode(args));
         }
     }
-    let mut tried: HashSet<u64> = HashSet::new();
-    let mut seen_sides: HashSet<(B256, usize, bool)> = HashSet::new();
-    let mut before = taken(s, labels, wanted);
-    let mut runs = 0;
     let campaign = opts.campaign.as_ref();
     let until = campaign.map(|c| Instant::now() + c.per_test);
     let replay = campaign.and_then(|c| c.replay.as_ref());
+    let random_only = campaign.is_some_and(|c| c.random_only);
+    // The corpus: inputs that took a side nothing before them had (The Fuzzing Book's greybox population). Mutations
+    // start from them; the solver, when its turn comes, flips the leaves of their paths.
+    let mut corpus: Vec<Vec<u8>> = vec![];
+    // The solver's queue: solved inputs to run (front: toward a target; back: toward a side this test hasn't taken).
+    let mut queue: VecDeque<Vec<u8>> = VecDeque::new();
+    // What the solver still has to look at: corpus entries not yet run with the shadow.
+    let mut to_solve: VecDeque<Vec<u8>> = VecDeque::new();
     if let Some(r) = replay {
         queue = r.get(test).cloned().unwrap_or_default().into();
+    } else {
+        queue.extend(seeds.iter().cloned());
     }
+    // Fuzz first (plain runs, fast), solve when coverage stops growing (the plateau), fuzz again from what the solver
+    // found: fuzzing finds what random inputs can, the solver the equalities and magic values they can't.
+    let fuzz_first = replay.is_none() && (campaign.is_some() || opts.fuzz_runs > 0);
+    let mut fuzzing_now = fuzz_first;
+    let mut since_new = 0usize;
+    let mut plain_runs = 0usize;
+    let mut tried: HashSet<u64> = HashSet::new();
+    let mut seen_sides: HashSet<(B256, usize, bool)> = HashSet::new();
+    let mut before = taken(s, labels, wanted);
+    let mut covered = sides_taken(s);
+    let mut runs = 0;
     let mut failed_once = false;
+    let mut reported: HashSet<String> = HashSet::new();
     loop {
         if stop.load(Ordering::Relaxed) {
             break;
         }
-        let data = match queue.pop_front() {
-            Some(d) => d,
-            // A campaign fuzzes until its time is up: with nothing queued, a fresh random input.
-            None if until.is_some() && replay.is_none() => match rng.value(&types) {
-                Some(DynSolValue::Tuple(args)) => {
-                    let mut d = selector.clone();
-                    d.extend(DynSolValue::Tuple(args).abi_encode_params());
-                    d
-                }
-                _ => break,
-            },
-            None => break,
-        };
-        match until {
-            Some(u) if replay.is_none() && Instant::now() >= u => break,
-            None if runs >= opts.runs_per_test => break,
-            _ => {}
+        if let Some(u) = until {
+            if replay.is_none() && Instant::now() >= u {
+                break;
+            }
         }
-        runs += 1;
-        part.runs += 1;
+        // Whose turn: the fuzzer's (a mutation of a corpus entry, or a seed still queued), or the solver's.
+        let (data, symbolic) = if fuzzing_now && !queue.is_empty() && seeds.iter().any(|x| x == queue.front().unwrap()) {
+            (queue.pop_front().unwrap(), false)
+        } else if fuzzing_now {
+            let plateau = if campaign.is_some() { since_new >= opts.plateau } else { plain_runs >= opts.fuzz_runs || since_new >= opts.plateau };
+            if plateau && !random_only {
+                fuzzing_now = false;
+                since_new = 0;
+                continue;
+            }
+            if until.is_none() && plain_runs >= opts.fuzz_runs {
+                // Not a campaign and nothing left to solve either: done.
+                if random_only || (queue.is_empty() && to_solve.is_empty()) {
+                    break;
+                }
+                fuzzing_now = false;
+                continue;
+            }
+            // Mostly a mutation of a corpus entry (or a seed); now and then a fresh random input.
+            let pool: Vec<&Vec<u8>> = corpus.iter().chain(seeds.iter()).collect();
+            let base = if pool.is_empty() || rng.next().is_multiple_of(10) { None } else { decode(pool[(rng.next() % pool.len() as u64) as usize]) };
+            let args = match base {
+                Some(base) => crate::fuzz::mutate(&base, &mut rng, dict),
+                None => match rng.value(&types) {
+                    Some(DynSolValue::Tuple(args)) => args,
+                    _ => break,
+                },
+            };
+            (encode(args), false)
+        } else {
+            match queue.pop_front().or_else(|| to_solve.pop_front()) {
+                Some(d) => {
+                    if until.is_none() && runs >= opts.runs_per_test {
+                        break;
+                    }
+                    (d, true)
+                }
+                None if until.is_some() && replay.is_none() && !random_only => {
+                    // The solver has nothing left: fuzz again, from the corpus the solutions enlarged.
+                    fuzzing_now = true;
+                    since_new = 0;
+                    continue;
+                }
+                None => break,
+            }
+        };
         s.restore(ready);
-        let shadow = Arc::new(Mutex::new(Shadow::new(Sym::default(), &data)));
-        s.evm.inspector.extra = Some(Box::new(Shared(shadow.clone())));
+        let shadow = symbolic.then(|| Arc::new(Mutex::new(Shadow::new(Sym::default(), &data))));
+        if let Some(sh) = &shadow {
+            s.evm.inspector.extra = Some(Box::new(Shared(sh.clone())));
+            runs += 1;
+            part.runs += 1;
+        } else {
+            plain_runs += 1;
+            part.fuzz_runs += 1;
+        }
         let run = s.transact_quiet(sol_debug::SENDER, TxKind::Call(address), Bytes::from(data.clone()), U256::ZERO);
         s.evm.inspector.extra = None;
         let Ok(run) = run else { continue };
-        let Ok(mut shadow) = Arc::try_unwrap(shadow).map(|m| m.into_inner().unwrap()) else { continue };
-        part.mismatches += shadow.mismatches.len();
-        part.stale += shadow.stale;
-        for m in &shadow.mismatches {
-            *part.mismatch_ops.entry(m.op).or_default() += 1;
-        }
-        for c in &shadow.concretized {
-            *part.pinned_ops.entry(c.op).or_default() += 1;
-        }
         let rejected = !run.success && coverage::reason(&run) == "sol-debug: vm.assume rejected the inputs";
 
-        // Which target sides did this concrete run take?
+        // Which target sides did this concrete run take, and did it take any side at all that nothing had?
         let after = taken(s, labels, wanted);
         let args = show_args(sig, &data);
         let failed = (!run.success && !rejected).then(|| sol_debug::agent::decode_revert(s, &run.output));
@@ -626,6 +698,21 @@ fn explore_test(
             }
         }
         before = after;
+        let now_covered = sides_taken(s);
+        if now_covered > covered || symbolic {
+            // New coverage keeps the input; a solved input is kept whatever it covered (its path is where the solver
+            // works next).
+            if !rejected && !corpus.contains(&data) {
+                corpus.push(data.clone());
+                if !symbolic {
+                    to_solve.push_back(data.clone());
+                }
+            }
+            since_new = if now_covered > covered { 0 } else { since_new + 1 };
+            covered = now_covered;
+        } else {
+            since_new += 1;
+        }
         if let Some(c) = campaign {
             if replay.is_some() {
                 part.replayed.push((test.to_string(), data.clone(), run.success));
@@ -639,16 +726,25 @@ fn explore_test(
                     return;
                 }
             }
-            if c.random_only {
-                continue;
-            }
         } else if let Some(reason) = &failed {
-            if runs > 1 + opts.seeds {
-                // An input the solver produced makes the test fail: the test's claim doesn't hold for it.
+            // An input that makes the test fail, found by the solver or by a mutation (the seeds aside: a seed that
+            // fails says the test fails as it stands): the test's claim doesn't hold for it.
+            if !seeds.contains(&data) && reported.insert(reason.clone()) {
                 let reduced = reduce_finding(s, ready, address, &selector, &types, &data, reason);
                 before = taken(s, labels, wanted);
+                covered = sides_taken(s);
                 part.findings.push(Finding { file: String::new(), test: test.to_string(), args: args.clone(), reduced, reason: reason.clone() });
             }
+        }
+        let Some(shadow) = shadow else { continue };
+        let Ok(mut shadow) = Arc::try_unwrap(shadow).map(|m| m.into_inner().unwrap()) else { continue };
+        part.mismatches += shadow.mismatches.len();
+        part.stale += shadow.stale;
+        for m in &shadow.mismatches {
+            *part.mismatch_ops.entry(m.op).or_default() += 1;
+        }
+        for c in &shadow.concretized {
+            *part.pinned_ops.entry(c.op).or_default() += 1;
         }
 
         if std::env::var_os("CONCOLITY_DEBUG").is_some() {
@@ -792,6 +888,7 @@ impl Report {
             "targets": targets,
             "findings": findings,
             "runs": self.runs,
+            "fuzz_runs": self.fuzz_runs,
             "solver_calls": self.solver_calls,
             "mismatches": self.mismatches,
             "mismatch_ops": self.mismatch_ops,
@@ -818,7 +915,7 @@ impl Report {
             count(|x| matches!(x, Outcome::InputsDontReach)),
             count(|x| matches!(x, Outcome::NotReached)),
         );
-        let _ = writeln!(o, "{}", paint::dim(format!("{} runs, {} solver calls, {} malformed solutions dropped, {:.1}s", self.runs, self.solver_calls, self.malformed, self.time.as_secs_f64())));
+        let _ = writeln!(o, "{}", paint::dim(format!("{} fuzz runs, {} symbolic runs, {} solver calls, {} malformed solutions dropped, {:.1}s", self.fuzz_runs, self.runs, self.solver_calls, self.malformed, self.time.as_secs_f64())));
         let mismatches = format!("model self-check mismatches: {} {:?}; stale shadows dropped: {}", self.mismatches, self.mismatch_ops, self.stale);
         let _ = writeln!(o, "{}", if self.mismatches > 0 { paint::red(mismatches) } else { paint::dim(mismatches) });
         let _ = writeln!(o, "{}\n", paint::dim(format!("values pinned, by opcode: {:?}", self.pinned_ops)));

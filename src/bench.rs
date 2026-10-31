@@ -320,6 +320,8 @@ fn read_corpus(dir: &Path, sigs: &HashMap<String, String>) -> HashMap<String, Ve
 fn campaign_opts(opts: &Options, tests: &HashSet<String>) -> explore::Options {
     explore::Options {
         coverage: coverage::Options { root: opts.root.clone(), test_dir: "test".into(), skip: vec![], include: opts.mutate.clone(), fuzz_runs: 0, fast: false },
+        fuzz_runs: 256,
+        plateau: 64,
         runs_per_test: 0,
         flips_per_run: 6,
         timeout_ms: opts.timeout_ms,

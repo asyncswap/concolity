@@ -7,6 +7,7 @@ pub mod chain;
 pub mod coverage;
 pub mod explore;
 pub mod expr;
+pub mod fuzz;
 pub mod paint;
 pub mod reduce;
 pub mod sarif;

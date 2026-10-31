@@ -104,14 +104,21 @@ concolity explore                                           # every untaken side
 concolity explore --target src/AsyncSwap.sol:446            # only the untaken sides on that line
 concolity explore --only ReduceMatchedOrders                # only fuzz tests whose Contract::name contains this
 concolity explore --timeout-ms 20000                        # a deep equation (256-bit multiplication) needs longer
-concolity explore --runs-per-test 40 --flips-per-run 12     # a longer campaign per test (defaults 12 and 6)
+concolity explore --fuzz-runs 1000 --plateau 100            # more plain fuzzing before the solver (defaults 256 and 64)
+concolity explore --fuzz-runs 0                             # the solver from the first run, as before
+concolity explore --runs-per-test 40 --flips-per-run 12     # more symbolic runs per test (defaults 12 and 6)
 concolity explore --json                                    # every side with its outcome, and the findings
 concolity explore --sarif .formal/findings.sarif            # findings, unreachable and solved sides (merged into the file)
 CONCOLITY_DEBUG=1 concolity explore --only X                # print each run's decisions and pins
 ```
 
 It needs the suite's branch map, which it reads from the cache when coverage has run on this code, and runs
-coverage first otherwise. Each untaken side ends as one of:
+coverage first otherwise. Per fuzz test it **fuzzes first**: plain runs of random and mutated inputs (one argument
+changed at a time, inside its type; the constants the bytecode pushes as a dictionary), kept when they take a branch
+side nothing took before. When `--plateau` runs in a row add no side, the **solver takes over**: each kept input runs
+with the symbolic shadow and z3 flips the sides of its path no test takes; a solution runs for real, joins the corpus,
+and in a campaign the fuzzing resumes from it. Fuzzing finds what random inputs can, cheaply; the solver finds the
+equalities and magic values they can't. Each untaken side ends as one of:
 
 | Outcome | Meaning | What to do |
 |---|---|---|

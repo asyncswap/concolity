@@ -510,19 +510,19 @@ pub(crate) fn compile_cached(project: &formal_ast::solc::Project, entries: &[Str
 pub(crate) struct Rng(pub(crate) u64);
 
 impl Rng {
-    fn next(&mut self) -> u64 {
+    pub(crate) fn next(&mut self) -> u64 {
         self.0 ^= self.0 << 13;
         self.0 ^= self.0 >> 7;
         self.0 ^= self.0 << 17;
         self.0
     }
 
-    fn word(&mut self) -> U256 {
+    pub(crate) fn word(&mut self) -> U256 {
         U256::from_limbs([self.next(), self.next(), self.next(), self.next()])
     }
 
     /// Mostly edge values and small numbers, sometimes anything: what finds boundaries.
-    fn uint(&mut self, bits: usize) -> U256 {
+    pub(crate) fn uint(&mut self, bits: usize) -> U256 {
         let max = if bits == 256 { U256::MAX } else { (U256::from(1) << bits) - U256::from(1) };
         let v = match self.next() % 8 {
             0 => U256::ZERO,

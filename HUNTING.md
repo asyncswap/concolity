@@ -114,7 +114,8 @@ bit-0x4 multiplier). Two bench bugs found and fixed on the way: a test that fail
 filter and `--fail-fast` ended every run on it; forge's rejection limit (65,536) ends a time-boxed run on a test whose
 `vm.assume` rejects most inputs (FullMath's). What was missing in the tools, found here: the sequence runner again;
 and a campaign that fuzzes before it solves (FUZZ.md §7), since 2 s of solving lost to 2 s of random inputs on every
-mutant here.
+mutant here. Built the same day: `explore` fuzzes first (mutations inside the ABI types, the bytecode's constants as a
+dictionary, sides as feedback) and solves at the plateau; measured on the Async Swap benchmark below.
 
 ### Fuzzer benchmark: the price book's mutants (2026-10-26, fead63f)
 

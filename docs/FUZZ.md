@@ -151,6 +151,11 @@ flowchart LR
 
 ## 7. The hybrid: fuzz until it plateaus, then solve
 
+**Built (2026-10-31), for single calls:** `explore` fuzzes each test first (`src/fuzz.rs`: mutations over the decoded
+arguments inside their types, a dictionary of the bytecode's PUSH constants, the JUMPI sides as feedback, a corpus of
+the inputs that added one), hands over to z3 at the plateau (`--plateau` runs without a new side; `--fuzz-runs` caps
+the phase outside a campaign), and in a campaign fuzzes again from the solutions. The sequence form below is next.
+
 ```mermaid
 sequenceDiagram
     participant F as fuzz
